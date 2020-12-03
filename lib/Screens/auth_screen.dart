@@ -1,10 +1,6 @@
 import 'dart:math';
 
-import 'package:Shop/models/http_exceptions.dart';
-
-import '../providers/auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 enum AuthMode { Signup, Login }
 
@@ -94,8 +90,7 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard>
-    with SingleTickerProviderStateMixin {
+class _AuthCardState extends State<AuthCard> {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {
@@ -104,67 +99,8 @@ class _AuthCardState extends State<AuthCard>
   };
   var _isLoading = false;
   final _passwordController = TextEditingController();
-  AnimationController _controller;
-  Animation<Size> _heightAnimation;
-  Animation<Offset> _slideAnimation;
-  Animation<double> _opacityAnimation;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _controller = AnimationController(
-      async: this,
-      duration: Duration(milliseconds: 300),
-    );
-    _heightAnimation = Tween<Size>(
-      begin: Size(double.infinity, 260),
-      end: Size(double.infinity, 320),
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.fastOutSlowIn,
-      ),
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(0, -1.5),
-      end: Offset(0, 0),
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.fastOutSlowIn,
-      ),
-    );
-    _opacityAnimation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-    _heightAnimation.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _controller.dispose();
-  }
-
-  void _showErrorDialogue(String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('an error occured'),
-        content: Text(message),
-        actions: <Widget>[
-          FlatButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-              },
-              child: Text('Okay'))
-        ],
-      ),
-    );
-  }
-
-  Future<void> _submit() async {
+  void _submit() {
     if (!_formKey.currentState.validate()) {
       // Invalid!
       return;
@@ -173,35 +109,11 @@ class _AuthCardState extends State<AuthCard>
     setState(() {
       _isLoading = true;
     });
-    try {
-      if (_authMode == AuthMode.Login) {
-        // Log user in
-        await Provider.of<Auth>(context, listen: false)
-            .login(_authData['email'], _authData['password']);
-      } else {
-        // Sign user up
-        await Provider.of<Auth>(context, listen: false)
-            .signUp(_authData['email'], _authData['password']);
-      }
-    } on HttpException catch (error) {
-      var errorMessage = 'authentication failed';
-      if (error.toString().contains('EMAIL_EXISTS')) {
-        errorMessage = 'This email address is already in use';
-      } else if (error.toString().contains('INVALID_EMAIL')) {
-        errorMessage = 'this is an invalid email';
-      } else if (error.toString().contains('WEAK_PASSWORD')) {
-        errorMessage = 'this is a weak password';
-      } else if (error.toString().contains('DOES_NOT_EXIST')) {
-        errorMessage = 'could not find a user';
-      } else if (error.toString().contains('INVALID_PASSWORD')) {
-        errorMessage = 'inavalid password';
-      }
-      _showErrorDialogue(errorMessage);
-    } catch (error) {
-      const errorMessage = 'could not authenticate you. please try again later';
-      _showErrorDialogue(errorMessage);
+    if (_authMode == AuthMode.Login) {
+      // Log user in
+    } else {
+      // Sign user up
     }
-
     setState(() {
       _isLoading = false;
     });
@@ -212,12 +124,10 @@ class _AuthCardState extends State<AuthCard>
       setState(() {
         _authMode = AuthMode.Signup;
       });
-      _controller.forward();
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
-      _controller.reverse();
     }
   }
 
@@ -229,16 +139,10 @@ class _AuthCardState extends State<AuthCard>
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeIn,
+      child: Container(
         height: _authMode == AuthMode.Signup ? 320 : 260,
-        // height: _heightAnimation.value.height,
         constraints:
-            // BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260
-            BoxConstraints(
-          minHeight: _authMode == AuthMode.Signup ? 320 : 260,
-        ),
+            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
         width: deviceSize.width * 0.75,
         padding: EdgeInsets.all(16.0),
         child: Form(
@@ -272,31 +176,17 @@ class _AuthCardState extends State<AuthCard>
                   },
                 ),
                 if (_authMode == AuthMode.Signup)
-                  AnimatedContainer(
-                    constraints: BoxConstraints(
-                        minHeight: _authMode == AuthMode.Signup ? 60 : 0,
-                        maxHeight: _authMode == AuthMode.Signup ? 120 : 0),
-                    duration: Duration(microseconds: 300),
-                    curve: Curves.easeIn,
-                    child: FadeTransition(
-                      opacity: _opacityAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: TextFormField(
-                          enabled: _authMode == AuthMode.Signup,
-                          decoration:
-                              InputDecoration(labelText: 'Confirm Password'),
-                          obscureText: true,
-                          validator: _authMode == AuthMode.Signup
-                              ? (value) {
-                                  if (value != _passwordController.text) {
-                                    return 'Passwords do not match!';
-                                  }
-                                }
-                              : null,
-                        ),
-                      ),
-                    ),
+                  TextFormField(
+                    enabled: _authMode == AuthMode.Signup,
+                    decoration: InputDecoration(labelText: 'Confirm Password'),
+                    obscureText: true,
+                    validator: _authMode == AuthMode.Signup
+                        ? (value) {
+                            if (value != _passwordController.text) {
+                              return 'Passwords do not match!';
+                            }
+                          }
+                        : null,
                   ),
                 SizedBox(
                   height: 20,

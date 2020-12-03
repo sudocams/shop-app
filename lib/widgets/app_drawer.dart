@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build (BuildContext context) {
     return Drawer(
       child: Column(
         children: <Widget>[
@@ -16,7 +16,7 @@ class AppDrawer extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.shop),
+            leading: Icon (Icons.shop),
             title: Text('shop'),
             onTap: () {
               Navigator.of(context).pushReplacementNamed('/');
